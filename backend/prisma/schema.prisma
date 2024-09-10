@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String
+  name            String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  preferences     Preferences?
+  bookmarks       Bookmark[]
+  readingHistory  ReadingHistory[]
+  notifications   Notification[]
+  dashboardConfig DashboardConfig?
+
+  Recommendation Recommendation[]
+
+  AdminAnalytics AdminAnalytics[]
+}
+
+model Preferences {
+  id       String  @id @default(uuid())
+  userId   String  @unique
+  topics   String[] // Array of user-selected topics (e.g., ["Technology", "Science"])
+  sources  String[] // Array of preferred content sources (e.g., ["YouTube", "NewsAPI"])
+  User     User     @relation(fields: [userId], references: [id])
+}
+
+model Content {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  url         String
+  source      String  // Content source, e.g., "YouTube", "NewsAPI"
+  type        ContentType
+  topics      String[] // Array of topics (e.g., ["Technology", "AI"])
+  publishedAt DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ReadingHistory ReadingHistory[]
+
+  Bookmark Bookmark[]
+
+  Recommendation Recommendation[]
+
+  AdminAnalytics AdminAnalytics[]
+}
+
+enum ContentType {
+  ARTICLE
+  VIDEO
+  PODCAST
+}
+
+model Recommendation {
+  id         String   @id @default(uuid())
+  userId     String
+  contentId  String
+  score      Float    // Recommendation score based on AI algorithm
+  createdAt  DateTime @default(now())
+  User       User     @relation(fields: [userId], references: [id])
+  Content    Content  @relation(fields: [contentId], references: [id])
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String
+  message    String
+  createdAt  DateTime @default(now())
+  User       User     @relation(fields: [userId], references: [id])
+}
+
+model Bookmark {
+  id         String   @id @default(uuid())
+  userId     String
+  contentId  String
+  createdAt  DateTime @default(now())
+  User       User     @relation(fields: [userId], references: [id])
+  Content    Content  @relation(fields: [contentId], references: [id])
+}
+
+model ReadingHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  contentId  String
+  lastAccessedAt DateTime @default(now())
+  progress   Float?   // Progress of content consumption (e.g., % of video watched)
+  User       User     @relation(fields: [userId], references: [id])
+  Content    Content  @relation(fields: [contentId], references: [id])
+}
+
+model DashboardConfig {
+  id        String  @id @default(uuid())
+  userId    String  @unique
+  layout    Json    // JSON representing dashboard layout
+  theme     Theme   // Dark, light, etc.
+  User      User    @relation(fields: [userId], references: [id])
+}
+
+enum Theme {
+  LIGHT
+  DARK
+}
+
+model AdminAnalytics {
+  id             String   @id @default(uuid())
+  userId         String
+  contentId      String
+  engagementRate Float    // Percentage of content engagement by users
+  views          Int      // Number of views for a particular content
+  bookmarks      Int      // Number of bookmarks for a particular content
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  User           User     @relation(fields: [userId], references: [id])
+  Content        Content  @relation(fields: [contentId], references: [id])
+}

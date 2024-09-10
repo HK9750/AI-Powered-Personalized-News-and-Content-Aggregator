@@ -1,0 +1,25 @@
+{
+  "name": "ai-powered-personalized-news-and-content-aggregator",
+  "version": "1.0.0",
+  "description": "An AI-Powered Personalized News and Content Aggregator that curates articles, videos, podcasts, and more from various sources based on a user's specific interests",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\"",
+    "build": "npm run build --prefix frontend && npm run build --prefix backend",
+    "start": "npm run start --prefix backend",
+    "test": "npm run test --prefix frontend && npm run test --prefix backend",
+    "lint": "npm run lint --prefix frontend && npm run lint --prefix backend",
+    "format": "prettier --write ."
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prettier": "^3.3.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
