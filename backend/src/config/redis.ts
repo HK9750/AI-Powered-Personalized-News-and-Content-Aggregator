@@ -6,13 +6,11 @@ dotenv.config();
 export const pub = new Redis({
   host: process.env.REDIS_HOST,
   port: parseInt(process.env.REDIS_PORT as string),
-  maxRetriesPerRequest: 100,
 });
 
 export const sub = new Redis({
   host: process.env.REDIS_HOST,
   port: parseInt(process.env.REDIS_PORT as string),
-  maxRetriesPerRequest: 100,
 });
 
 pub.on("connect", () => {

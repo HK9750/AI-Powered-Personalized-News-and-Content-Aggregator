@@ -2,7 +2,7 @@ import { Kafka, logLevel, Partitioners, Producer, Admin } from "kafkajs";
 
 export const kafka = new Kafka({
   clientId: "my-content-aggregator",
-  brokers: [process.env.KAFKA_BROKER || "kafka:9092"],
+  brokers: [process.env.KAFKA_BROKER as string],
   logLevel: logLevel.ERROR,
 });
 
