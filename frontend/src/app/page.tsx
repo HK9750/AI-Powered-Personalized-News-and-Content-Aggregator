@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { openai } from "@/lib/openai";
+import { openai } from "@/lib/openai/openai";
+import { signOut } from "next-auth/react";
 
 const App = () => {
   const [name, setName] = useState("");
@@ -29,6 +30,9 @@ const App = () => {
       />
       <button onClick={handleGenerate}>Generate</button>
       <p>{response ? response : "Press the button to generate text."}</p>
+      <button onClick={() => signOut({ callbackUrl: "/signIn" })}>
+        Sign Out
+      </button>
     </div>
   );
 };

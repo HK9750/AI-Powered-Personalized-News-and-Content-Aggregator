@@ -39,7 +39,7 @@ export const createTopic = async (topic: string) => {
       return;
     }
     await admin.createTopics({
-      topics: [{ topic }],
+      topics: [{ topic, numPartitions: 1 }],
     });
 
     console.log(`Topic ${topic} created successfully.`);
