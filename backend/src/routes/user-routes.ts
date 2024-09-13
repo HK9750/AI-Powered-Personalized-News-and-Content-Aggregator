@@ -1,11 +1,11 @@
 import express from "express";
 import { UserApi } from "../api/userApi";
 
-const userRouter = express.Router();
+const router = express.Router();
 
 const userapi = new UserApi();
 
-userRouter.post("/userauth", userapi.userAuth.bind(userapi));
-userRouter.post("/user", userapi.getUser.bind(userapi));
+router.post("/userauth", userapi.userAuth);
+router.post("/user", userapi.getUser);
 
-export default userRouter;
+export default router;

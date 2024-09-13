@@ -2,10 +2,21 @@
 import { useState } from "react";
 import { openai } from "@/lib/openai/openai";
 import { signOut } from "next-auth/react";
+import { useSignOut } from "@/lib/hooks/useSignOut";
 
 const App = () => {
   const [name, setName] = useState("");
   const [response, setResponse] = useState<string | null>("");
+  const signOut = useSignOut(
+    typeof window != "undefined" ? window.location.origin : ""
+  );
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  const handleName = (e: any) => {
+    setName(e.target.value);
+  };
 
   const handleGenerate = async () => {
     const response = await openai.chat.completions.create({
@@ -23,16 +34,10 @@ const App = () => {
   return (
     <div>
       <h1>OpenAI GPT-3</h1>
-      <input
-        type="text"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+      <input type="text" value={name} onChange={handleName} />
       <button onClick={handleGenerate}>Generate</button>
       <p>{response ? response : "Press the button to generate text."}</p>
-      <button onClick={() => signOut({ callbackUrl: "/signIn" })}>
-        Sign Out
-      </button>
+      <button onClick={handleSignOut}>Sign Out</button>
     </div>
   );
 };

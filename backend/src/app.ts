@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import ErrorMiddleware from "./middlewares/error";
 import userRoutes from "./routes/user-routes";
+import externalRoutes from "./routes/external-api-routes";
 
 dotenv.config();
 
@@ -17,7 +18,7 @@ app.use(cors(options));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use("/api/v1", userRoutes);
+app.use("/api/v1", userRoutes, externalRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
