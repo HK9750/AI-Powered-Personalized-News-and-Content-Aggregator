@@ -40,11 +40,7 @@ export class ExternalApi {
             },
           }
         );
-        return res.status(200).json({
-          success: true,
-          message: "Videos fetched",
-          videos: response.data.items,
-        });
+        return { videos: response.data.items };
       } catch (error) {
         return next(new Error("Internal Server Error in getYouTubeVideos"));
       }
@@ -66,11 +62,7 @@ export class ExternalApi {
             pageSize: 10,
           },
         });
-        res.status(200).json({
-          success: true,
-          message: "News fetched",
-          news: response.data.articles,
-        });
+        return { news: response.data.articles };
       } catch (error) {
         return next(new Error("Internal Server Error in getNews"));
       }
@@ -116,11 +108,7 @@ export class ExternalApi {
         const response = await axios.post("http://localhost:5000/recommend", {
           userContent: [userPreferences],
         });
-        return res.status(200).json({
-          success: true,
-          message: "Recommendations fetched",
-          recommendations: response.data.recommendations,
-        });
+        return { recommendations: response.data.recommendations };
       } catch (error) {
         console.error("Error fetching recommendations:", error);
         throw new Error("Could not fetch recommendations");

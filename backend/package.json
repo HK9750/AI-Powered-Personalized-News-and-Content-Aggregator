@@ -4,7 +4,7 @@
   "description": "Backend of the AI-Powered Personalized news content aggregator",
   "main": "index.js",
   "scripts": {
-    "backend": "ts-node-dev --respawn src/index.ts",
+    "backend": "ts-node-dev --respawn src/index.ts && cd src/scripts && python3 flaskserver.py",
     "dev": "ts-node-dev --respawn src/index.ts",
     "seed": "ts-node --require tsconfig-paths/register prisma/seed.ts",
     "build": "tsc",

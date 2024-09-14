@@ -93,6 +93,8 @@ model ReadingHistory {
   progress   Float?   // Progress of content consumption (e.g., % of video watched)
   User       User     @relation(fields: [userId], references: [id])
   Content    Content  @relation(fields: [contentId], references: [id])
+
+  @@unique([userId, contentId])
 }
 
 model DashboardConfig {
