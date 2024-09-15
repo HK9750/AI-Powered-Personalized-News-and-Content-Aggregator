@@ -1,12 +1,11 @@
 "use server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { useGetSession } from "@/app/api/auth/[...nextauth]/route";
 import { cookies, headers } from "next/headers";
 import { getToken } from "next-auth/jwt";
 import { getUserByEmail } from "./actions/auth0/users";
 
 export async function getSessionUser() {
-  const session = await getServerSession(authOptions);
+  const session = await useGetSession();
   const email = session?.user?.email || "";
 
   if (!email) {

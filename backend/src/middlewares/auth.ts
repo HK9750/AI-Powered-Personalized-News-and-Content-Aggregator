@@ -1,7 +1,7 @@
 import { getToken } from "next-auth/jwt";
 import { Request, Response, NextFunction } from "express";
+import ErrorHandler from "../utils/errorHandler";
 
-// Extend the Request interface to include the user property
 interface CustomRequest extends Request {
   user?: any;
 }
@@ -11,17 +11,23 @@ export const extractUserFromSession = async (
   res: Response,
   next: NextFunction
 ) => {
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  try {
+    const session = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+      raw: true,
+    });
 
-  if (!token) {
-    return res.status(401).json({ error: "Unauthorized" });
+    console.log("session", session);
+
+    if (!session || !session) {
+      return next(new ErrorHandler("User is not authenticated", 401));
+    }
+
+    req.user = session;
+
+    next();
+  } catch (error) {
+    return next(new ErrorHandler("Error in authentication", 500));
   }
-
-  // Attach user info to the request
-  req.user = token;
-
-  next();
 };

@@ -1,6 +1,6 @@
 import { createUser, getUserByEmail } from "@/lib/actions/auth0/users";
 import { NextAuthOptions } from "next-auth";
-import NextAuth from "next-auth/next";
+import NextAuth, { getServerSession } from "next-auth/next";
 import Auth0 from "next-auth/providers/auth0";
 
 const {
@@ -29,9 +29,6 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       let userData;
-      console.log(profile);
-      console.log(user);
-      console.log(account);
       if (!account || !user?.email) {
         console.error("No account or email found", account, user);
         return false;
@@ -69,8 +66,8 @@ export const authOptions: NextAuthOptions = {
       if (account) {
         token.accessToken = account.access_token;
         token.idToken = account.id_token;
+        token.refreshToken = account.refresh_token;
       }
-
       return token;
     },
     async redirect({ url, baseUrl }) {
@@ -82,5 +79,9 @@ export const authOptions: NextAuthOptions = {
 };
 
 const handler = NextAuth(authOptions);
+
+export const useGetSession = () => {
+  return getServerSession(authOptions);
+};
 
 export { handler as GET, handler as POST };

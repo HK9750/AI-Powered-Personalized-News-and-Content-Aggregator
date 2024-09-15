@@ -1,8 +1,9 @@
 const NEXT_PUBLIC_BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export const getUserByEmail = async (email: string) => {
-  const response = await fetch(`${NEXT_PUBLIC_BACKEND_URL}/api/v1/user`, {
+  const response = await fetch(`${NEXT_PUBLIC_BACKEND_URL}/api/v1/users/user`, {
     method: "POST",
+    mode: "no-cors",
     headers: {
       "Content-Type": "application/json",
     },
