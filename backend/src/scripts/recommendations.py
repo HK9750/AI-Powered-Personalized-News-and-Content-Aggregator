@@ -1,24 +1,28 @@
-# /scripts/recommender.py
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import pandas as pd
+from sklearn.neighbors import NearestNeighbors
 
-# Example content data (available content from the APIs)
-available_content = [
-    "Latest AI news and developments",
-    "Trends in podcasting for technology 2024",
-    "YouTube video on artificial intelligence applications",
-    "New tech tools for 2024"
-]
 
-def recommend(user_content):
-    vectorizer = TfidfVectorizer()
-    user_content_vec = vectorizer.fit_transform(user_content)
-    available_content_vec = vectorizer.transform(available_content)
-
-    # Compute Cosine Similarity
-    cosine_similarities = cosine_similarity(user_content_vec, available_content_vec)
-    top_n = 2
-    recommendations = np.argsort(cosine_similarities.flatten())[::-1][:top_n]
-
-    return [available_content[idx] for idx in recommendations]
+def recommend(youtube_data, news_data, podcast_data, preferences_data):
+    youtube_df = pd.DataFrame(youtube_data)
+    news_df = pd.DataFrame(news_data)
+    podcast_df = pd.DataFrame(podcast_data)
+    
+    preferred_topics = preferences_data['topics']
+    if preferred_topics:
+        youtube_df = youtube_df[youtube_df['snippet']['title'].str.contains('|'.join(preferred_topics), case=False, na=False)]
+        news_df = news_df[news_df['title'].str.contains('|'.join(preferred_topics), case=False, na=False)]
+        podcast_df = podcast_df[podcast_df['title'].str.contains('|'.join(preferred_topics), case=False, na=False)]
+    
+    combined_features = pd.concat([youtube_df[['snippet.title', 'snippet.description']], news_df[['title', 'description']], podcast_df[['title', 'description']]], axis=1)
+    
+    X = np.random.rand(combined_features.shape[0], 10)
+    model = NearestNeighbors(n_neighbors=5, algorithm='auto').fit(X)
+    
+    user_preferences_vector = np.random.rand(1,5)
+    
+    distances, indices = model.kneighbors(user_preferences_vector)
+    
+    recommendations = combined_features.iloc[indices[0]]
+    
+    return recommendations

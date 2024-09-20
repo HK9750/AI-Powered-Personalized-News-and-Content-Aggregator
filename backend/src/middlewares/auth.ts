@@ -1,33 +1,50 @@
-import { getToken } from "next-auth/jwt";
-import { Request, Response, NextFunction } from "express";
+import { Response, Request, NextFunction } from "express";
+import prisma from "../utils/prisma";
+import jwt from "jsonwebtoken";
+import AsyncErrorHandler from "../utils/asyncErrorHandler";
 import ErrorHandler from "../utils/errorHandler";
 
-interface CustomRequest extends Request {
-  user?: any;
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
 }
 
-export const extractUserFromSession = async (
-  req: CustomRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const session = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-      raw: true,
-    });
+export const authenticateUser = AsyncErrorHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
 
-    console.log("session", session);
-
-    if (!session || !session) {
-      return next(new ErrorHandler("User is not authenticated", 401));
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return next(new ErrorHandler("No token provided", 401));
     }
 
-    req.user = session;
+    const token = authHeader.split(" ")[1];
 
-    next();
-  } catch (error) {
-    return next(new ErrorHandler("Error in authentication", 500));
+    try {
+      const decoded: any = jwt.verify(
+        token,
+        process.env.NEXT_PUBLIC_AUTH0_SECRET!
+      );
+
+      if (!decoded || !decoded.email) {
+        return next(new ErrorHandler("Invalid token", 401));
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { email: decoded.email.toLowerCase() },
+      });
+
+      if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+      }
+
+      req.user = user;
+
+      next();
+    } catch (error) {
+      return next(new ErrorHandler("Unauthorized access", 401));
+    }
   }
-};
+);

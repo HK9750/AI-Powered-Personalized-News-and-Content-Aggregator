@@ -2,6 +2,7 @@ import axios from "axios";
 import AsyncErrorHandler from "../utils/asyncErrorHandler";
 import { NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
+import ErrorHandler from "../utils/errorHandler";
 dotenv.config();
 
 export class ExternalApi {
@@ -19,99 +20,101 @@ export class ExternalApi {
     this.openAiApiKey = process.env.OPENAI_API_KEY;
   }
 
-  public getYouTubeVideos = AsyncErrorHandler(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const { query } = req.body;
-      if (!query) {
-        return next(new Error("Please enter a query"));
+  public getYouTubeVideos = async (query: string) => {
+    const response = await axios.get(
+      "https://www.googleapis.com/youtube/v3/search",
+      {
+        params: {
+          part: "snippet",
+          q: query,
+          type: "video",
+          key: this.youtubeApiKey,
+          maxResults: 10,
+          order: "relevance",
+        },
       }
+    );
+    return response.data.items;
+  };
 
-      try {
-        const response = await axios.get(
-          "https://www.googleapis.com/youtube/v3/search",
-          {
-            params: {
-              part: "snippet",
-              q: query,
-              type: "video",
-              key: this.youtubeApiKey,
-              maxResults: 10,
-              order: "relevance",
-            },
-          }
-        );
-        return { videos: response.data.items };
-      } catch (error) {
-        return next(new Error("Internal Server Error in getYouTubeVideos"));
-      }
-    }
-  );
+  public getNews = async (query: string) => {
+    const response = await axios.get("https://newsapi.org/v2/everything", {
+      params: {
+        q: query,
+        apiKey: this.newsApiKey,
+        pageSize: 10,
+      },
+    });
+    return response.data.articles;
+  };
 
-  public getNews = AsyncErrorHandler(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const { query } = req.body;
-      if (!query) {
-        return next(new Error("Please enter a query"));
+  public getPodcasts = async (query: string) => {
+    const response = await axios.get(
+      "https://api.podcastindex.org/api/1.0/search/byterm",
+      {
+        params: {
+          q: query,
+          key: this.podcastIndexApiKey,
+          secret: this.podcastIndexSecret,
+        },
       }
+    );
 
-      try {
-        const response = await axios.get("https://newsapi.org/v2/everything", {
-          params: {
-            q: query,
-            apiKey: this.newsApiKey,
-            pageSize: 10,
-          },
-        });
-        return { news: response.data.articles };
-      } catch (error) {
-        return next(new Error("Internal Server Error in getNews"));
-      }
-    }
-  );
+    return response.data.feeds;
+  };
+}
 
-  public getPodcasts = AsyncErrorHandler(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const { query } = req.body;
-      if (!query) {
-        return next(new Error("Please enter a query"));
-      }
+export class RecommendationApi {
+  externalApi: ExternalApi;
+  flaskApiUrl: string | undefined;
 
-      try {
-        const response = await axios.get(
-          "https://api.podcastindex.org/api/1.0/search/byterm",
-          {
-            params: {
-              q: query,
-              key: this.podcastIndexApiKey,
-              secret: this.podcastIndexSecret,
-            },
-          }
-        );
-        res.status(200).json({
-          success: true,
-          message: "Podcasts fetched",
-          podcasts: response.data.feeds,
-        });
-      } catch (error) {
-        return next(new Error("Internal Server Error in getPodcasts"));
-      }
-    }
-  );
+  constructor() {
+    this.externalApi = new ExternalApi();
+    this.flaskApiUrl = process.env.FLASK_BACKEND_URL;
+  }
 
   public getRecommendations = AsyncErrorHandler(
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const { userPreferences } = req.body;
-        if (!userPreferences) {
-          return next(new Error("Please enter user preferences"));
+        const { query, preferences } = req.body;
+
+        if (!query) {
+          return next(new ErrorHandler("Query is required", 400));
         }
-        const response = await axios.post("http://localhost:5000/recommend", {
-          userContent: [userPreferences],
+
+        let youtubeData = [];
+        let newsData = [];
+        let podcastData = [];
+
+        if (preferences.sources.includes("youtube")) {
+          youtubeData = await this.externalApi.getYouTubeVideos(query);
+        }
+
+        if (preferences.sources.includes("news")) {
+          newsData = await this.externalApi.getNews(query);
+        }
+
+        if (preferences.sources.includes("podcasts")) {
+          podcastData = await this.externalApi.getPodcasts(query);
+        }
+
+        const recommendationsResponse = await axios.post(
+          `${this.flaskApiUrl}/recommend`,
+          {
+            youtubeData,
+            newsData,
+            podcastData,
+            preferences,
+          }
+        );
+
+        res.status(200).json({
+          recommendations: recommendationsResponse.data,
         });
-        return { recommendations: response.data.recommendations };
       } catch (error) {
-        console.error("Error fetching recommendations:", error);
-        throw new Error("Could not fetch recommendations");
+        return next(
+          new ErrorHandler("Internal Server Error in getRecommendations", 500)
+        );
       }
     }
   );

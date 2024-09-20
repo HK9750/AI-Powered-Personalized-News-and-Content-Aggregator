@@ -12,6 +12,7 @@ import bookmarkRoutes from "./routes/bookmark-routes";
 import DashboardConfigRoutes from "./routes/dashboard-config-routes";
 import notificationRoutes from "./routes/notification-routes";
 import ReadingHistoryRoutes from "./routes/reading-history-routes";
+import PreferencesRoutes from "./routes/preferences-routes";
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.use("/api/v1/bookmark", bookmarkRoutes);
 app.use("/api/v1/dashboard-config", DashboardConfigRoutes);
 app.use("/api/v1/notification", notificationRoutes);
 app.use("/api/v1/reading-history", ReadingHistoryRoutes);
+app.use("/api/v1/preferences", PreferencesRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
